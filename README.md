@@ -67,4 +67,5 @@ This is the first "working" version of this code that passes a few tests and
 doesn't crash. Performance is iffy, the code isn't clean, and there might be
 some unhandled edge cases.
 
-Known unhandled edge case: usize > u64.
+Edit: This definitely panics in some scenarios when attempting to free. I'll
+fix the bugs this weekend and add usize>u64 support.
