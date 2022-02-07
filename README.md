@@ -24,11 +24,11 @@ git subrepo clone git+https://github.com/hmusgrave/zcirc.git [optional-subdir]
 ## Examples
 ```zig
 const std = @import("std");
-const CircleAllocator = @import("zcirc.zig").CircleAllocator;
+const CircularAllocator= @import("zcirc.zig").CircularAllocator;
 
 test "something" {
     // Much like working with an ArenaAllocator
-    var circle = CircleAllocator.init(std.testing.allocator);
+    var circle = CircularAllocator.init(std.testing.allocator);
     defer circle.deinit();
     var allocator = circle.allocator();
 
@@ -39,23 +39,24 @@ test "something" {
 
     // The total "busy" bytes in our internal buffers include the
     // space for a and b, plus some slop for alignment and bookkeeping
+    const overhead = @alignOf(CircularAllocator.Meta) + @sizeOf(CircularAllocator.Meta) - 2;
     try std.testing.expectEqual(
-        b.len + 12 + @alignOf(u8) + @sizeOf(u32) + 12 + @alignOf(u32),
-        circle.total_bytes()
+        (b.len + @sizeOf(u32)) + (@alignOf(u8) + @alignOf(u32)) + 2*overhead,
+        circle.count()
     );
 
     // Deletes all data up through (including) the pointer `a`
     circle.free_left(a);
 
     // The total "busy" bytes only track space used for `b` now
-    try std.testing.expectEqual(b.len + 12 + @alignOf(u8), circle.total_bytes());
+    try std.testing.expectEqual(b.len + @alignOf(u8) + overhead, circle.count());
 
     // Deletes all data from (including) the slice `b`
     circle.free_right(b);
 
     // Our internal buffers are completely empty. New allocations will
     // attempt to reuse that space.
-    try std.testing.expectEqual(@as(usize, 0), circle.total_bytes());
+    try std.testing.expectEqual(@as(usize, 0), circle.count());
 }
 ```
 
@@ -63,9 +64,5 @@ test "something" {
 Contributions welcome. I'll check back on this repo at least once per month.
 Currently targets Zig 0.10.*-dev.
 
-This is the first "working" version of this code that passes a few tests and
-doesn't crash. Performance is iffy, the code isn't clean, and there might be
-some unhandled edge cases.
-
-Edit: This definitely panics in some scenarios when attempting to free. I'll
-fix the bugs this weekend and add usize>u64 support.
+The test suite isn't very complete yet, but any bugs should be superficial at
+this point.
