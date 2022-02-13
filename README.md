@@ -7,7 +7,7 @@ A dynamic circular buffer allocator for zig
 One use case for circular buffers is handling allocations that depend on
 previous allocations, after which the previous data is no longer necessary.
 This library handles that use case when you don't know ahead of time how much
-memory you might need.
+memory you might need and can't afford the worst-case latency of a resize operation.
 
 ## Installation
 
